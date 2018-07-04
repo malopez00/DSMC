@@ -15,7 +15,7 @@ m = 1
 effective_diameter = 1
 effective_radius = effective_diameter/2
 # Desired particle density
-n_density = 0.00005
+n_density = 0.000003
 baseStateVelocity = 5
 # Normal restitution coefficient
 alpha = 0.1
@@ -45,9 +45,10 @@ ratio_bin_mfp = bin_size/mean_free_path
 # 'MCG31' gives the best performance, 'MT2203' provides better randomness
 # https://software.intel.com/en-us/mkl-vsnotes-basic-generators
 random_intel.seed(brng='MT2203')
+
 results = []
-for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 0.99):
-    n_runs = 5
+for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
+    n_runs = 10
     a2_mean = []
     for c in range(n_runs):
         # Initialize particle positions as a 2D numpy array (uniform).
@@ -110,10 +111,10 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 
             
             
             printProgressBar(i, n_steps, prefix='Simulating system:', 
-                             suffix='completed  -  T = '+str(T)+' '+str(c))
+                             suffix='completed  -  T = '+str(T)+' - Run: '+str(c+1))
         # print(T)
         # We average over the last 3rd of the data
-        a2_mean.append(np.mean(cumulants[-int(len(cumulants)/3):]))
+        a2_mean.append(np.mean(cumulants[-int(len(cumulants)/12):]))
         
     results.append([alpha, np.mean(a2_mean), np.std(a2_mean)])
 

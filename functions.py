@@ -17,7 +17,7 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     # First we have to determine the maximum number of candidate collisions
     n_cols_max = int((N**2) * np.pi * (effective_diameter**2) * rv_max * Ne * dt / (2*V))
     # Another method of estimating that value, a numerical factor times the average thermal velocity
-    # n_cols_max =  8.5 * np.linalg.norm(vel, axis=1).mean()
+    #n_cols_max =  int(8.5 * np.linalg.norm(vel, axis=1).mean())
     
     # It is more efficient to generate all random numbers at once
     random_intel.seed(brng='MT2203')
@@ -137,13 +137,13 @@ def computeKurtosis(vel):
     v = np.linalg.norm(vel, axis=1)
     v2 = v**2
 
-    k = (v**4).mean()/((v2).mean())**2
+    k = (v**4).mean()/(v2.mean())**2
     
     return k
 
 def compute_a2(vel, dimensions):
     kurtosis = computeKurtosis(vel)
-    a2 = (dimensions/(dimensions+2))*kurtosis -1
+    a2 = (dimensions/(dimensions+2))*kurtosis - 1
     
     return a2
 
