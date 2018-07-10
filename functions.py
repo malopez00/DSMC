@@ -14,6 +14,7 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     y = np.array([0,1,0])
     z = np.array([0,0,1])
     """
+    #rv_max = findMaximumRelativeVelocity(vel)
     # First we have to determine the maximum number of candidate collisions
     n_cols_max = int((N**2) * np.pi * (effective_diameter**2) * rv_max * Ne * dt / (2*V))
     # Another method of estimating that value, a numerical factor times the average thermal velocity
@@ -43,9 +44,21 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     #if len(alertas) > 0:
     #    print(len(alertas))
     
+    # The valid pairs of particles of each valid collision are:
     valid_pairs = random_pairs[valid_cols]
+    
     # Number of collisions that take place in this step
     cols_current_step = len(valid_pairs)
+    
+    # For each valid collision we generate a random direction (the 'normal'
+    # direction of collision). We generate 2 arrays o angles (theta and phi) 
+    # and use them to create an array of unit vectors.
+    angles_array = random_intel.uniform(0, 2*np.pi, size=(cols_current_step, 2))
+    x_coord = np.cos(angles_array[:,0])*np.sin(angles_array[:,1])
+    y_coord = np.cos(angles_array[:,0])*np.cos(angles_array[:,1])
+    z_coord = np.sin(angles_array[:,0])
+    sigmas = np.stack((x_coord, y_coord, z_coord), axis=1).tolist()
+
     # Now we only have to process those valid pairs
     for pair in valid_pairs:
         i, j = pair[0], pair[1]
@@ -54,23 +67,26 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
         q = random_intel.uniform(-1,1)
         theta = np.arccos(q)
         phi = random_intel.uniform(0, 2*np.pi)
-        sigma_ij = np.array([np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi), np.cos(theta)])
-        sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
+        sigma_ij = np.array([np.cos(theta)*np.sin(phi), np.cos(theta)*np.cos(phi), np.sin(theta)])
         """
+        
         # The normal direction shall be calculated using random numbers
         # TODO: this numbers and vectors can be generated more efficiently ouside the loop
         # https://math.stackexchange.com/questions/1385137/calculate-3d-vector-out-of-two-angles-and-vector-length
-        theta = random_intel.uniform(0, 2*np.pi)
-        phi = random_intel.uniform(0, 2*np.pi)
-        sigma_ij = np.array([np.cos(theta)*np.sin(phi), np.cos(theta)*np.cos(phi), np.sin(theta)])
+        #theta = random_intel.uniform(0, 2*np.pi)
+        #phi = random_intel.uniform(0, 2*np.pi)
+        #sigma_ij = np.array([np.cos(theta)*np.sin(phi), np.cos(theta)*np.cos(phi), np.sin(theta)])
         # Next line is redundant, the vector is already unitary
         # sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
+        
         
         """
         # First, we calculate the normal direction as a unit vector
         sigma_ij = pos[i] - pos[j]
         sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
         """
+        # We extract a random direction from the list that we have generated previously
+        sigma_ij = np.array(sigmas.pop())
         # Alpha acts in the normal direction
         # Pöschel's 'Computational Granular Dynamics', pag 193:
         vel[i] -= 0.5*(1+alpha) * np.dot((vel[i] - vel[j]), sigma_ij) * sigma_ij
@@ -119,7 +135,7 @@ def propagate(t, pos, vel, LX, LY, LZ):
     return pos
 
 
-def findMaximumRelativeVelocity(v):
+def findMaximumRelativeVelocity(vel):
     """
     vmax = 0
     for i in range(n_bins):
@@ -130,6 +146,7 @@ def findMaximumRelativeVelocity(v):
         if vmax < local_vmax:
             vmax = local_vmax
     """
+    v = np.linalg.norm(vel, axis=1)
     vmax = v.max() 
     # I overestimate, returning 2 times the maximum velocity in the system
     return 2*vmax

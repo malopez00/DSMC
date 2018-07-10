@@ -7,7 +7,7 @@ Created on Mon Jun 25 19:03:08 2018
 import numpy as np
 from numpy import random_intel
 import matplotlib.pyplot as plt
-from functions import propagate, findMaximumRelativeVelocity, computeCollisions, printProgressBar, compute_a2
+from functions import propagate, computeCollisions, printProgressBar, compute_a2, findMaximumRelativeVelocity
                     
 
 # Simulation variables
@@ -47,8 +47,9 @@ ratio_bin_mfp = bin_size/mean_free_path
 random_intel.seed(brng='MT2203')
 
 results = []
-for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
-    n_runs = 10
+#for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0,70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
+for alpha in (0.71,):
+    n_runs = 1
     a2_mean = []
     for c in range(n_runs):
         # Initialize particle positions as a 2D numpy array (uniform).
@@ -72,10 +73,7 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 
         
         # TODO: Maybe here is the error --------------------------------------------------------------
         # Maximum relative Velocity
-        # TODO: Esto debería ir dentro de la funcion compute collisions
-        # TODO: asi el programa seria mas eficiente al variar el limite maximo
-        # TODO: de velocidad relativa en cada paso y no evaluar colisiones de mas
-        rv_max = findMaximumRelativeVelocity(initial_v)
+        rv_max = findMaximumRelativeVelocity(vel)
         #rv_max =  int(8.5 * np.linalg.norm(vel, axis=1).mean())
         
         print('Number of particles: ', N)
@@ -98,7 +96,7 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 
             pos = propagate(dt, pos, vel, LX, LY, LZ)
             vel, cols_current_step = computeCollisions(effective_diameter, 
                                                        effective_radius, alpha, 
-                                                       V, N, Ne, dt, rv_max, 
+                                                       V, N, Ne, dt, rv_max,
                                                        pos, vel)
             n_collisions += cols_current_step
             cols_per_particle = n_collisions / N
@@ -116,6 +114,10 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 
             if i%10==0:
                 a2 = compute_a2(vel, 3)
                 cumulants.append(a2)
+                # Update rv_max every 10 steps to keep permormance up
+                # (to avoid calculating more collisions than necessary)
+                rv_max = findMaximumRelativeVelocity(vel)
+                
             T = (vel[:,0]**2+vel[:,1]**2+vel[:,2]**2).mean()
             temperatures.append(T)
             
