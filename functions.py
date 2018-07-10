@@ -17,7 +17,8 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     # First we have to determine the maximum number of candidate collisions
     n_cols_max = int((N**2) * np.pi * (effective_diameter**2) * rv_max * Ne * dt / (2*V))
     # Another method of estimating that value, a numerical factor times the average thermal velocity
-    #n_cols_max =  int(8.5 * np.linalg.norm(vel, axis=1).mean())
+    
+    
     
     # It is more efficient to generate all random numbers at once
     random_intel.seed(brng='MT2203')
@@ -36,13 +37,36 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     # With this information we can check which collisions are valid
     ratios = rel_vs_mod / rv_max
     valid_cols = ratios > random_numbers
+    
+    # This is used to check that rv_max is always greater than the relative velocity of any given pair
+    #alertas = np.where(ratios>1)[0]
+    #if len(alertas) > 0:
+    #    print(len(alertas))
+    
     valid_pairs = random_pairs[valid_cols]
+    # Number of collisions that take place in this step
+    cols_current_step = len(valid_pairs)
     # Now we only have to process those valid pairs
     for pair in valid_pairs:
         i, j = pair[0], pair[1]
+        """
+        # The normal direction shall be calculated using random numbers
+        q = random_intel.uniform(-1,1)
+        theta = np.arccos(q)
+        phi = random_intel.uniform(0, 2*np.pi)
+        sigma_ij = np.array([np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi), np.cos(theta)])
+        sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
+        """
+        theta = random_intel.uniform(0, 2*np.pi)
+        phi = random_intel.uniform(0, 2*np.pi)
+        sigma_ij = np.array([np.cos(theta)*np.sin(phi), np.cos(theta)*np.cos(phi), np.sin(theta)])
+        sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
+        
+        """
         # First, we calculate the normal direction as a unit vector
         sigma_ij = pos[i] - pos[j]
-        sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)        
+        sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
+        """
         # Alpha acts in the normal direction
         # Pöschel's 'Computational Granular Dynamics', pag 193:
         vel[i] -= 0.5*(1+alpha) * np.dot((vel[i] - vel[j]), sigma_ij) * sigma_ij
@@ -70,10 +94,12 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
             v_prime = rv * (np.sin(theta)*np.cos(phi)*x + np.sin(theta)*np.sin(phi)*y + np.cos(theta)*z)
             
             # TODO: There is an error, alpha should only act in the normal direction
-            vel[i] = alpha*(v_center_mass + 0.5*v_prime)
-            vel[j] = alpha*(v_center_mass - 0.5*v_prime)
+            vel[i] = v_center_mass + 0.5*v_prime
+            vel[j] = v_center_mass - 0.5*v_prime
+            
+            
     """
-    return vel
+    return vel, cols_current_step
     
 
 def propagate(t, pos, vel, LX, LY, LZ):
