@@ -15,7 +15,7 @@ m = 1
 effective_diameter = 1
 effective_radius = effective_diameter/2
 # Desired particle density
-n_density = 0.0000003
+n_density = 0.000003
 baseStateVelocity = 5
 # Normal restitution coefficient
 alpha = 0.1
@@ -72,6 +72,9 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.90, 0.95, 
         
         # TODO: Maybe here is the error --------------------------------------------------------------
         # Maximum relative Velocity
+        # TODO: Esto debería ir dentro de la funcion compute collisions
+        # TODO: asi el programa seria mas eficiente al variar el limite maximo
+        # TODO: de velocidad relativa en cada paso y no evaluar colisiones de mas
         rv_max = findMaximumRelativeVelocity(initial_v)
         #rv_max =  int(8.5 * np.linalg.norm(vel, axis=1).mean())
         

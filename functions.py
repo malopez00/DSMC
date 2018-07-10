@@ -57,10 +57,14 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
         sigma_ij = np.array([np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi), np.cos(theta)])
         sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
         """
+        # The normal direction shall be calculated using random numbers
+        # TODO: this numbers and vectors can be generated more efficiently ouside the loop
+        # https://math.stackexchange.com/questions/1385137/calculate-3d-vector-out-of-two-angles-and-vector-length
         theta = random_intel.uniform(0, 2*np.pi)
         phi = random_intel.uniform(0, 2*np.pi)
         sigma_ij = np.array([np.cos(theta)*np.sin(phi), np.cos(theta)*np.cos(phi), np.sin(theta)])
-        sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
+        # Next line is redundant, the vector is already unitary
+        # sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
         
         """
         # First, we calculate the normal direction as a unit vector
@@ -174,7 +178,11 @@ def compute_a2(vel, dimensions):
     return a2
 
 
-def theoretical_a2(alpha, d):
-    a2 = (16*(1-alpha) * (1 - 2*(alpha**2))) / (9 + 24*d - alpha*(41 - 8*d) + 30*(1-alpha)*(alpha**2))
+def theoretical_a2(alpha, d, method=2):
+    if method==1:
+        a2 = (16*(1-alpha) * (1 - 2*(alpha**2))) / (9 + 24*d - alpha*(41 - 8*d) + 30*(1-alpha)*(alpha**2))
+    elif method==2:
+        a2 = (16*(1-alpha) * (1 - 2*(alpha**2))) / (25 + 24*d - alpha*(57 - 8*d) - 2*(1-alpha)*(alpha**2))
+        
     
     return a2
