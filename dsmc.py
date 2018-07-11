@@ -15,7 +15,7 @@ m = 1
 effective_diameter = 1
 effective_radius = effective_diameter/2
 # Desired particle density
-n_density = 0.000003
+n_density = 0.00001
 baseStateVelocity = 5
 # Normal restitution coefficient
 alpha = 0.1
@@ -47,9 +47,9 @@ ratio_bin_mfp = bin_size/mean_free_path
 random_intel.seed(brng='MT2203')
 
 results = []
-#for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0,70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
-for alpha in (0.71,):
-    n_runs = 1
+for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
+#for alpha in (0.71,):
+    n_runs = 15
     a2_mean = []
     for c in range(n_runs):
         # Initialize particle positions as a 2D numpy array (uniform).

@@ -16,7 +16,7 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     """
     #rv_max = findMaximumRelativeVelocity(vel)
     # First we have to determine the maximum number of candidate collisions
-    n_cols_max = int((N**2) * np.pi * (effective_diameter**2) * rv_max * Ne * dt / (2*V))
+    n_cols_max = int((N**2) * np.pi * (effective_diameter**2) * rv_max * dt / (2*V))
     # Another method of estimating that value, a numerical factor times the average thermal velocity
     
     
@@ -29,12 +29,23 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     random_numbers = random_intel.uniform(0,1, n_cols_max).tolist()
     
     
+    angles_array = random_intel.uniform(0, 2*np.pi, size=(n_cols_max, 2))
+    x_coord = np.cos(angles_array[:,0])*np.sin(angles_array[:,1])
+    y_coord = np.cos(angles_array[:,0])*np.cos(angles_array[:,1])
+    z_coord = np.sin(angles_array[:,0])
+    sigmas = np.stack((x_coord, y_coord, z_coord), axis=1)
+    
     #"""
     # This is a vectorized method, it should be faster than the for loop
     # Testing, it is 2x faster
     # Using those random pairs we calculate relative velocities and its modulus
     rel_vs = np.array(list(map(lambda i, j: vel[i]-vel[j], random_pairs[:,0], random_pairs[:,1])))
-    rel_vs_mod = np.linalg.norm(rel_vs, axis=1)
+    
+    # TODO: ver notas de fvega, esta en la tabla
+    # Scalar (dot) product of rel_vs and sigmas
+    rel_vs_mod = np.array(list(map(lambda a, b: np.dot(a, b), rel_vs, sigmas)))
+    
+    #rel_vs_mod = np.linalg.norm(rel_vs, axis=1)
     # With this information we can check which collisions are valid
     ratios = rel_vs_mod / rv_max
     valid_cols = ratios > random_numbers
@@ -50,6 +61,7 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     # Number of collisions that take place in this step
     cols_current_step = len(valid_pairs)
     
+    """
     # For each valid collision we generate a random direction (the 'normal'
     # direction of collision). We generate 2 arrays o angles (theta and phi) 
     # and use them to create an array of unit vectors.
@@ -58,6 +70,8 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     y_coord = np.cos(angles_array[:,0])*np.cos(angles_array[:,1])
     z_coord = np.sin(angles_array[:,0])
     sigmas = np.stack((x_coord, y_coord, z_coord), axis=1).tolist()
+    """
+    valid_sigmas = sigmas[valid_cols].tolist()
 
     # Now we only have to process those valid pairs
     for pair in valid_pairs:
@@ -86,7 +100,7 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
         sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
         """
         # We extract a random direction from the list that we have generated previously
-        sigma_ij = np.array(sigmas.pop())
+        sigma_ij = np.array(valid_sigmas.pop())
         # Alpha acts in the normal direction
         # Pöschel's 'Computational Granular Dynamics', pag 193:
         vel[i] -= 0.5*(1+alpha) * np.dot((vel[i] - vel[j]), sigma_ij) * sigma_ij
