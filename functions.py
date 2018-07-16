@@ -7,19 +7,14 @@ Created on Tue Jun 26 18:30:06 2018
 import numpy as np
 from numpy import random_intel
 
-def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt, rv_max, pos, vel):
-    """
-    # Define unity vectors:
-    x = np.array([1,0,0])
-    y = np.array([0,1,0])
-    z = np.array([0,0,1])
-    """
-    #rv_max = findMaximumRelativeVelocity(vel)
+def computeCollisions(effective_diameter, effective_radius, alpha, V, N, rem, dt, rv_max, pos, vel):
+
     # First we have to determine the maximum number of candidate collisions
-    n_cols_max = int((N**2) * np.pi * (effective_diameter**2) * rv_max * dt / (2*V))
-    # Another method of estimating that value, a numerical factor times the average thermal velocity
-    
-    
+    # TODO. en un sitio divide por V (poschel) y en otro por 2V (garcia)
+    n_cols_max = ((N**2) * np.pi * (effective_diameter**2) * rv_max * dt / (2*V)) + rem
+    # Remaining collisions (<1) (computed in next time_step)
+    rem = n_cols_max - int(n_cols_max)
+    n_cols_max = int(n_cols_max)
     
     # It is more efficient to generate all random numbers at once
     random_intel.seed(brng='MT2203')
@@ -27,25 +22,25 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     random_pairs = random_intel.choice(N, size=(n_cols_max,2))
     # List of random numbers to use as collision criteria
     random_numbers = random_intel.uniform(0,1, n_cols_max).tolist()
+
+
+    thetas = np.arccos(random_intel.uniform(-1,1, size=n_cols_max))
+    phis = random_intel.uniform(0,2*np.pi, size=n_cols_max)
     
-    
-    angles_array = random_intel.uniform(0, 2*np.pi, size=(n_cols_max, 2))
-    x_coord = np.cos(angles_array[:,0])*np.sin(angles_array[:,1])
-    y_coord = np.cos(angles_array[:,0])*np.cos(angles_array[:,1])
-    z_coord = np.sin(angles_array[:,0])
+    x_coord = np.sin(thetas)*np.cos(phis)
+    y_coord = np.sin(thetas)*np.sin(phis)
+    z_coord = np.cos(thetas)
     sigmas = np.stack((x_coord, y_coord, z_coord), axis=1)
     
-    #"""
+    
     # This is a vectorized method, it should be faster than the for loop
     # Testing, it is 2x faster
     # Using those random pairs we calculate relative velocities and its modulus
     rel_vs = np.array(list(map(lambda i, j: vel[i]-vel[j], random_pairs[:,0], random_pairs[:,1])))
-    
     # TODO: ver notas de fvega, esta en la tabla
     # Scalar (dot) product of rel_vs and sigmas
     rel_vs_mod = np.array(list(map(lambda a, b: np.dot(a, b), rel_vs, sigmas)))
     
-    #rel_vs_mod = np.linalg.norm(rel_vs, axis=1)
     # With this information we can check which collisions are valid
     ratios = rel_vs_mod / rv_max
     valid_cols = ratios > random_numbers
@@ -61,79 +56,23 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, Ne, dt,
     # Number of collisions that take place in this step
     cols_current_step = len(valid_pairs)
     
-    """
-    # For each valid collision we generate a random direction (the 'normal'
-    # direction of collision). We generate 2 arrays o angles (theta and phi) 
-    # and use them to create an array of unit vectors.
-    angles_array = random_intel.uniform(0, 2*np.pi, size=(cols_current_step, 2))
-    x_coord = np.cos(angles_array[:,0])*np.sin(angles_array[:,1])
-    y_coord = np.cos(angles_array[:,0])*np.cos(angles_array[:,1])
-    z_coord = np.sin(angles_array[:,0])
-    sigmas = np.stack((x_coord, y_coord, z_coord), axis=1).tolist()
-    """
-    valid_sigmas = sigmas[valid_cols].tolist()
+
+    # Valid directions
+    # We reverse the list to begin poping values from the beginning inside for loop
+    valid_sigmas = (sigmas[valid_cols])[::-1].tolist()
 
     # Now we only have to process those valid pairs
     for pair in valid_pairs:
         i, j = pair[0], pair[1]
-        """
-        # The normal direction shall be calculated using random numbers
-        q = random_intel.uniform(-1,1)
-        theta = np.arccos(q)
-        phi = random_intel.uniform(0, 2*np.pi)
-        sigma_ij = np.array([np.cos(theta)*np.sin(phi), np.cos(theta)*np.cos(phi), np.sin(theta)])
-        """
-        
-        # The normal direction shall be calculated using random numbers
-        # TODO: this numbers and vectors can be generated more efficiently ouside the loop
-        # https://math.stackexchange.com/questions/1385137/calculate-3d-vector-out-of-two-angles-and-vector-length
-        #theta = random_intel.uniform(0, 2*np.pi)
-        #phi = random_intel.uniform(0, 2*np.pi)
-        #sigma_ij = np.array([np.cos(theta)*np.sin(phi), np.cos(theta)*np.cos(phi), np.sin(theta)])
-        # Next line is redundant, the vector is already unitary
-        # sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
-        
-        
-        """
-        # First, we calculate the normal direction as a unit vector
-        sigma_ij = pos[i] - pos[j]
-        sigma_ij = sigma_ij / np.linalg.norm(sigma_ij)
-        """
-        # We extract a random direction from the list that we have generated previously
+
+        # We extract a random direction from the list that we generated previously
         sigma_ij = np.array(valid_sigmas.pop())
         # Alpha acts in the normal direction
         # Pöschel's 'Computational Granular Dynamics', pag 193:
         vel[i] -= 0.5*(1+alpha) * np.dot((vel[i] - vel[j]), sigma_ij) * sigma_ij
         vel[j] += 0.5*(1+alpha) * np.dot((vel[i] - vel[j]), sigma_ij) * sigma_ij
-    #"""
-    """
-    # This is another slower method, it is here for future reference
-    # We iterate over the list of possible collisions (over each pair of particles)
-    for pair in random_pairs:
-        # We choose a random pair of particles
-        i, j = pair[0], pair[1]
-        # Computing their relative velocity
-        rv = relativeVelocity(i, j, vel)
-        # We extract a random number from the list
-        rand = random_numbers.pop()
-        # We decide whether the collision takes place or not
-        if rv/rv_max > rand:
-            # Proccess that collision:
 
-            # 3D velocity calculation, taken from 'Alexander and Garcia, Computer Simulation, DSMC'
-            v_center_mass = 0.5 * (vel[i] + vel[j])
-            q = random_intel.uniform(-1,1)
-            theta = np.arccos(q)
-            phi = random_intel.uniform(0, 2*np.pi)
-            v_prime = rv * (np.sin(theta)*np.cos(phi)*x + np.sin(theta)*np.sin(phi)*y + np.cos(theta)*z)
-            
-            # TODO: There is an error, alpha should only act in the normal direction
-            vel[i] = v_center_mass + 0.5*v_prime
-            vel[j] = v_center_mass - 0.5*v_prime
-            
-            
-    """
-    return vel, cols_current_step
+    return vel, cols_current_step, rem
     
 
 def propagate(t, pos, vel, LX, LY, LZ):

@@ -14,20 +14,22 @@ from functions import propagate, computeCollisions, printProgressBar, compute_a2
 m = 1
 effective_diameter = 1
 effective_radius = effective_diameter/2
+# Total number of particles in the system
+N = 8000
 # Desired particle density
-n_density = 0.00001
 baseStateVelocity = 5
 # Normal restitution coefficient
 alpha = 0.1
 # System size and volume
-LX = 2000
-LY = 2000
-LZ = 2000
+LX = 250
+LY = 250
+LZ = 250
 V = LX*LY*LZ
 # Volume occuppied by one particle
 particle_volume = (4/3)*np.pi*(effective_radius**3)
-# Total number of particles in the system
-N = int(n_density*(V/particle_volume)) # La densidad se usa como volumen ocupado/V
+# La densidad se usa como volumen ocupado/V
+# Particle density
+n_density = N*particle_volume/V
 # Effective particles represented by each simulation particle.
 # Each particle in the program represents 'Ne' particles in the real system.
 Ne = 1
@@ -49,7 +51,7 @@ random_intel.seed(brng='MT2203')
 results = []
 for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
 #for alpha in (0.71,):
-    n_runs = 15
+    n_runs = 10
     a2_mean = []
     for c in range(n_runs):
         # Initialize particle positions as a 2D numpy array (uniform).
@@ -60,12 +62,11 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.70, 0.75, 0.85, 0.90, 
         #plt.hist(vel[:,0], bins=250)
         #plt.scatter(pos[:,0], pos[:,1])
         
-        initial_v = np.sqrt(vel[:,0]**2+vel[:,1]**2+vel[:,2]**2)
-        initial_mean_v = initial_v.mean()
+        initial_mean_v = np.linalg.norm(vel, axis=1).mean()
         mean_free_time = mean_free_path / initial_mean_v
         
         # Simulation lenght and step_time as multiples of mean free times
-        simulation_length = 30
+        simulation_length = 50
         step_duration = 0.01
         dt = step_duration * mean_free_time
         # Number of steps to simulate
@@ -92,11 +93,12 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.70, 0.75, 0.85, 0.90, 
         temperatures = []
         cumulants = []
         n_collisions = 0
+        rem = 0 # Remaining collisions (<1), see Poschel's Computational Granular Dynamics, pag 204 (dcollrest)
         for i in range(n_steps):
             pos = propagate(dt, pos, vel, LX, LY, LZ)
-            vel, cols_current_step = computeCollisions(effective_diameter, 
+            vel, cols_current_step, rem = computeCollisions(effective_diameter, 
                                                        effective_radius, alpha, 
-                                                       V, N, Ne, dt, rv_max,
+                                                       V, N, rem, dt, rv_max,
                                                        pos, vel)
             n_collisions += cols_current_step
             cols_per_particle = n_collisions / N
@@ -118,7 +120,7 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.70, 0.75, 0.85, 0.90, 
                 # (to avoid calculating more collisions than necessary)
                 rv_max = findMaximumRelativeVelocity(vel)
                 
-            T = (vel[:,0]**2+vel[:,1]**2+vel[:,2]**2).mean()
+            T = np.linalg.norm(vel, axis=1).mean()
             temperatures.append(T)
             
             
@@ -127,6 +129,7 @@ for alpha in (0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.70, 0.75, 0.85, 0.90, 
         # print(T)
         # We average over the last 3rd/5th of the data
         a2_mean.append(np.mean(cumulants[-int(len(cumulants)/5):]))
+        #plt.plot(cumulants)
         
     results.append([alpha, np.mean(a2_mean), np.std(a2_mean)])
 
