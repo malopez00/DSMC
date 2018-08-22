@@ -8,6 +8,7 @@ import numpy as np
 from numpy import random_intel
 import matplotlib.pyplot as plt
 from functions import propagate, computeCollisions, printProgressBar, compute_a2, findMaximumRelativeVelocity
+from graphics import plotTheoryVsSimulation
                     
 
 # Simulation variables
@@ -15,7 +16,7 @@ m = 1
 effective_diameter = 1
 effective_radius = effective_diameter/2
 # Total number of particles in the system
-N = 5000
+N = 2000
 # Desired particle density
 baseStateVelocity = 5
 # Normal restitution coefficient
@@ -51,7 +52,7 @@ random_intel.seed(brng='MT2203')
 results = []
 for alpha in (0.65, 0.70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
 #for alpha in (0.71,):
-    n_runs = 15
+    n_runs = 10
     a2_mean = []
     for c in range(n_runs):
         # Initialize particle positions as a 2D numpy array (uniform).
@@ -62,7 +63,7 @@ for alpha in (0.65, 0.70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
         #plt.hist(vel[:,0], bins=250)
         #plt.scatter(pos[:,0], pos[:,1])
         
-        # Now we make vel to be non-dimentional, scaling it with the initial mean vel
+        # Now we make vel to be non-dimensional, scaling it with the initial mean vel
         # i.e: v = v/|v0| 
         vel = vel/np.linalg.norm(vel, axis=1).mean()
         # We now scale the velocity so that the vel of the center of mass 
@@ -150,3 +151,4 @@ for alpha in (0.65, 0.70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
 print()    
 #plt.plot(temperatures)
 plt.plot(cumulants)
+plotTheoryVsSimulation(results)
