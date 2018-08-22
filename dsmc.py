@@ -62,9 +62,13 @@ for alpha in (0.65, 0.70, 0.75, 0.85, 0.90, 0.95, 0.97, 1):
         #plt.hist(vel[:,0], bins=250)
         #plt.scatter(pos[:,0], pos[:,1])
         
+        # Now we make vel to be non-dimentional, scaling it with the initial mean vel
+        # i.e: v = v/|v0| 
+        vel = vel/np.linalg.norm(vel, axis=1).mean()
         # We now scale the velocity so that the vel of the center of mass 
         # is initialized at 0.  Pöschel pag.203
         vel -= np.mean(vel, axis=0)
+
         
         initial_mean_v = np.linalg.norm(vel, axis=1).mean()
         mean_free_time = mean_free_path / initial_mean_v
