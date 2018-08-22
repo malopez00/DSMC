@@ -11,9 +11,17 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, rem, dt
 
     # First we have to determine the maximum number of candidate collisions
     # TODO. en un sitio divide por V (poschel) y en otro por 2V (garcia)
-    n_cols_max = ((N**2) * np.pi * (effective_diameter**2) * rv_max * dt / (2*V)) + rem
-    # Remaining collisions (<1) (computed in next time_step)
+# =============================================================================
+#     n_cols_max = ((N**2) * np.pi * (effective_diameter**2) * rv_max * dt / (2*V)) + rem
+# =============================================================================
+# =============================================================================
+#     n_cols_max = ((N**2) * np.pi * (effective_diameter**2) * rv_max * dt / (V)) + rem
+# =============================================================================
+    n_cols_max = (N * rv_max * dt /2) + rem
+    
+    # Remaining collisions (<1) (to be computed in next time_step)
     rem = n_cols_max - int(n_cols_max)
+
     n_cols_max = int(n_cols_max)
     
     # It is more efficient to generate all random numbers at once
@@ -21,7 +29,7 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, rem, dt
     # We choose multiple (n_cols_max) random pairs of particles
     random_pairs = random_intel.choice(N, size=(n_cols_max,2))
     # List of random numbers to use as collision criteria
-    random_numbers = random_intel.uniform(0,1, n_cols_max).tolist()
+    random_numbers = random_intel.uniform(0,1, n_cols_max)
 
 
     thetas = np.arccos(random_intel.uniform(-1,1, size=n_cols_max))
@@ -54,11 +62,10 @@ def computeCollisions(effective_diameter, effective_radius, alpha, V, N, rem, dt
     valid_pairs = random_pairs[valid_cols]
     
     # Number of collisions that take place in this step
-    cols_current_step = len(valid_pairs)
-    
+    cols_current_step = len(valid_pairs)   
 
-    # Valid directions
-    # We reverse the list to begin poping values from the beginning inside for loop
+    # Valid directions (sigmas asociated with valid collisions)
+    # We reverse the list to begin poping values from the beginning inside the for loop
     valid_sigmas = (sigmas[valid_cols])[::-1].tolist()
 
     # Now we only have to process those valid pairs
