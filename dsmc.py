@@ -19,6 +19,7 @@ effective_radius = effective_diameter/2
 N = 200000
 dt = 0.0005
 n_steps = 15000
+n_runs = 10
 fwr = 6
 # Desired particle density
 baseStateVelocity = 5
@@ -51,9 +52,9 @@ random_intel.seed(brng='MT2203')
 
 results = []
 for alpha in (0.35, 0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.97, 0.99):
-#for alpha in (1,):
-    n_runs = 12
+
     a2_mean = []
+    # Loop for each run of the same alpha
     for c in range(n_runs):
         # Initialize particle positions as a 2D numpy array (uniform).
         # As this is DSMC, some particles may be overlapping and not affect the outcome
@@ -83,6 +84,7 @@ for alpha in (0.35, 0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 
         cumulants = []
         n_collisions = 0
         rem = 0 # Remaining collisions (<1), see Poschel's Computational Granular Dynamics, pag 204 (dcollrest)
+        
         for i in range(n_steps):
             v2 = np.linalg.norm(vel, axis=1)**2
             v2_mean = v2.mean()
