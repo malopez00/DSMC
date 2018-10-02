@@ -7,41 +7,33 @@ Created on Mon Jun 25 19:03:08 2018
 import numpy as np
 from numpy import random_intel
 import matplotlib.pyplot as plt
+import params
 from functions import propagate, computeCollisions, printProgressBar, compute_a2, findMaximumRelativeVelocity
 from graphics import plotTheoryVsSimulation
-                    
 
-# Simulation variables
-m = 1
-effective_diameter = 1
-effective_radius = effective_diameter/2
-# Total number of particles in the system
-N = 200000
-dt = 0.0005
-n_steps = 15000
-n_runs = 10
-fwr = 6
-# Desired particle density
-baseStateVelocity = 5
-# Normal restitution coefficient
-alpha = 0.1
-# System size and volume
-LX = 200
-LY = 200
-LZ = 200
-V = LX*LY*LZ
-# Volume occuppied by one particle
-particle_volume = (4/3)*np.pi*(effective_radius**3)
-# La densidad se usa como volumen ocupado/V
-# Particle density (packing fraction)
-density = N*particle_volume/V
+# Read parameters from configuration file
+m = params.m
+N = params.N
+dt = params.dt
+n_steps = params.n_steps
+n_runs = params.n_runs
+fwr = params.fwr
+baseStateVelocity = params.baseStateVelocity
+alpha = params.alpha
+LX = params.LX
+LY = params.LY
+LZ = params.LZ
+V = params.V
 
-mean_free_path = 1 / (np.sqrt(2)*np.pi*(effective_diameter**2)*density)
-knudsen_number = mean_free_path / min(LX, LY, LZ)
-# Bins not used for the moment
-n_bins = 50
-bin_size = LZ/n_bins
-ratio_bin_mfp = bin_size/mean_free_path
+effective_radius = params.effective_radius
+effective_diameter = params.effective_diameter
+density = params.density
+mean_free_path = params.mean_free_path
+knudsen_number = params.knudsen_number
+
+# Bins, not used for the moment
+n_bins = params.n_bins
+ratio_bin_mfp = params.ratio_bin_mfp
 
 
 # Using Intel's Math Kernel Library
@@ -91,9 +83,8 @@ for alpha in (0.35, 0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 
             rv_max = findMaximumRelativeVelocity(v2_mean, fwr)
                         
             pos = propagate(dt, pos, vel, LX, LY, LZ)
-            vel, cols_current_step, rem = computeCollisions(effective_diameter, 
-                                                       alpha, V, N, rem, dt,
-                                                       rv_max, pos, vel)
+            vel, cols_current_step, rem = computeCollisions(alpha, N, rem, dt,
+                                                            rv_max, vel)
             n_collisions += cols_current_step
             cols_per_particle = n_collisions / N
             

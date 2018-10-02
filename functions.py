@@ -7,7 +7,7 @@ Created on Tue Jun 26 18:30:06 2018
 import numpy as np
 from numpy import random_intel
 
-def computeCollisions(effective_diameter, alpha, V, N, rem, dt, rv_max, pos, vel):
+def computeCollisions(alpha, N, rem, dt, rv_max, vel):
 
     # First we have to determine the maximum number of candidate collisions   
     n_cols_max = (N * rv_max * dt /2) + rem
