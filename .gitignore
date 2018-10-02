@@ -1,6 +1,4 @@
-temperatura.dat
-temperatura.png
-temp mas gradiente.png
+__pycache__/
 *.pyc
-*.pyc
-*.pyc
+*.png
+*.dat
