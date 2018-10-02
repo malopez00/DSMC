@@ -24,12 +24,9 @@ LX = params.LX
 LY = params.LY
 LZ = params.LZ
 V = params.V
-
 effective_radius = params.effective_radius
 effective_diameter = params.effective_diameter
-density = params.density
-mean_free_path = params.mean_free_path
-knudsen_number = params.knudsen_number
+
 
 # Bins, not used for the moment
 n_bins = params.n_bins
@@ -55,21 +52,11 @@ for alpha in (0.35, 0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 
         vel = random_intel.normal(0, baseStateVelocity, (N, 3))
         # We now scale the velocity so that the vel of the center of mass 
         # is initialized at 0.  Pöschel pag.203
-        vel -= np.mean(vel, axis=0)
-       
+        vel -= np.mean(vel, axis=0)       
         
-        initial_mean_v = np.linalg.norm(vel, axis=1).mean()
-        mean_free_time = mean_free_path / initial_mean_v     
-        
+        print()
         print('Number of particles: ', N)
         print('Coefficient of restitution: ', alpha)
-        print('LX = ', LX)
-        print('LY = ', LY)
-        print('LZ = ', LZ)
-        print('Density: ', density)
-        print('Mean free path: ', mean_free_path)
-        print('Knudsen number: ', knudsen_number)
-        print('Mean free time: ', mean_free_time)
         print()
         
         temperatures = []
