@@ -56,6 +56,7 @@ for alpha in (0.35, 0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 
         
         print()
         print('Number of particles: ', N)
+        print('Time step: ', dt)
         print('Coefficient of restitution: ', alpha)
         print()
         
@@ -68,15 +69,16 @@ for alpha in (0.35, 0.45, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 
             v2 = np.linalg.norm(vel, axis=1)**2
             v2_mean = v2.mean()
             rv_max = findMaximumRelativeVelocity(v2_mean, fwr)
-                        
-            pos = propagate(dt, pos, vel, LX, LY, LZ)
+            
+            # Propagation not used for now
+            # pos = propagate(dt, pos, vel, LX, LY, LZ)
             vel, cols_current_step, rem = computeCollisions(alpha, N, rem, dt,
                                                             rv_max, vel)
             n_collisions += cols_current_step
             cols_per_particle = n_collisions / N
             
             # Update a2 every 100 steps to keep permormance up
-            if i%100==0:
+            if i%10==0:
                 a2 = compute_a2(v2, 3)
                 cumulants.append(a2)                
                 T = (2/3)*v2_mean

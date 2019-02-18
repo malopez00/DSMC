@@ -3,10 +3,10 @@ import numpy as np
 # =========Simulation Variables=========
 
 m = 1 # Mass
-N = 10000 # Total number of particles in the system
-dt = 0.0005 # Time step duration
-n_steps = 12000 # Number of steps
-n_runs = 5 # Number of runs for each alpha
+N = 100000 # Total number of particles in the system
+dt = 0.001 # Time step duration
+n_steps = 15000 # Number of steps
+n_runs = 20 # Number of runs for each alpha
 fwr = 6 # Parameter used for calculating maximum relative velocity
 baseStateVelocity = 5 # Used to initialize velocity
 alpha = 0.1 # Normal restitution coefficient
